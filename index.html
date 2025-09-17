@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ClarifyAI Grammar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/diff@5.1.0/dist/diff.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.20.0",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.2.1",
+    "diff": "https://aistudiocdn.com/diff@^8.0.2"
+  }
+}
+</script>
+<style>
+    :root {
+        --bg-dark-1: #0F0F1B;
+        --bg-dark-2: #1B1B2F;
+        --accent-cyan: #00F6FF;
+        --accent-magenta: #FF00E5;
+        --accent-blue: #007BFF;
+        --text-light: #E0E0E0;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --glass-bg: rgba(27, 27, 47, 0.6);
+    }
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: var(--bg-dark-1);
+        background: linear-gradient(315deg, #0f0c29, #302b63, #24243e);
+        background-size: 400% 400%;
+        animation: gradientAnimation 15s ease infinite;
+        color: var(--text-light);
+    }
+    @keyframes gradientAnimation {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    .brand-glow {
+        text-shadow:
+            0 0 5px var(--accent-cyan),
+            0 0 10px var(--accent-cyan),
+            0 0 20px var(--accent-cyan),
+            0 0 40px var(--accent-magenta),
+            0 0 80px var(--accent-magenta);
+    }
+    .btn-3d {
+        transform-style: preserve-3d;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        perspective: 1000px;
+    }
+    .btn-3d:hover {
+        transform: translateZ(5px) rotateX(-5deg) rotateY(2deg);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+    }
+    .glassmorphic {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    }
+</style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
