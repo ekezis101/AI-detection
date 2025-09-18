@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Header } from './components/Header';
 import { TextInputArea } from './components/TextInputArea';
 import { ResultsPanel } from './components/ResultsPanel';
@@ -10,6 +10,7 @@ import { ComparisonView } from './components/ComparisonView';
 import { SummaryModal } from './components/SummaryModal';
 import { TranslateModal } from './components/TranslateModal';
 import { CorrectionModal } from './components/CorrectionModal';
+import { TranslationPrompt } from './components/TranslationPrompt';
 import { getAiHighlightColor, categoryToColor } from './utils/colorUtils';
 import { AnalysisResult, AnalysisStatus, WritingSuggestion } from './types';
 import { 
@@ -20,7 +21,8 @@ import {
   correctGrammar,
   proofreadText,
   summarizeText,
-  translateText
+  translateText,
+  detectLanguage
 } from './services/geminiService';
 import { DEFAULT_TEXT, TAB_AI_DETECTION, TAB_WRITING_QUALITY, TAB_PLAGIARISM } from './constants';
 import { AnalyzeIcon } from './components/icons';
@@ -58,6 +60,8 @@ function App() {
   const [activeTab, setActiveTab] = useState<string>(TAB_AI_DETECTION);
   const [reviewChanges, setReviewChanges] = useState<ReviewChangesState>(null);
   const [url, setUrl] = useState<string>('');
+  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
+  const [showTranslationPrompt, setShowTranslationPrompt] = useState<boolean>(false);
 
 
   const handleAnalyze = async () => {
@@ -65,6 +69,7 @@ function App() {
     setStatus(AnalysisStatus.Loading);
     setError(null);
     setAnalysisResult(null);
+    setShowTranslationPrompt(false);
     try {
       const [mainResult, plagiarismResult] = await Promise.all([
         analyzeText(text),
@@ -91,6 +96,7 @@ function App() {
     setStatus(AnalysisStatus.Loading);
     setError(null);
     setAnalysisResult(null);
+    setShowTranslationPrompt(false);
     try {
       const result = await checkGrammar(text);
       setAnalysisResult({
@@ -112,6 +118,7 @@ function App() {
     setStatus(AnalysisStatus.Loading); // Use main loading state
     setError(null);
     setAnalysisResult(null);
+    setShowTranslationPrompt(false);
     try {
       const result = await proofreadText(text);
       setAnalysisResult({
@@ -134,6 +141,7 @@ function App() {
     setStatus(AnalysisStatus.Loading);
     setError(null);
     setAnalysisResult(null);
+    setShowTranslationPrompt(false);
     try {
       const result = await checkPlagiarism(text);
       setAnalysisResult({
@@ -227,6 +235,28 @@ function App() {
     }
   };
 
+  const handleTranslateToEnglish = async () => {
+    if (!text.trim()) return;
+    setShowTranslationPrompt(false);
+    setIsTranslating(true);
+    setError(null);
+    const originalText = text;
+    try {
+      const translatedText = await translateText(text, 'English');
+      setReviewChanges({ original: originalText, modified: translatedText });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
+      setError(errorMessage);
+      setStatus(AnalysisStatus.Error);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+  
+  const handleDismissTranslationPrompt = () => {
+    setShowTranslationPrompt(false);
+  };
+
   const handleAcceptChanges = () => {
     if (reviewChanges) {
       setText(reviewChanges.modified);
@@ -305,6 +335,34 @@ function App() {
     setTimeout(() => setError(null), 3000);
   };
 
+  // Debounced language detection
+  useEffect(() => {
+    const handler = setTimeout(async () => {
+      // Conditions to skip detection
+      if (text.trim().length < 50 || status !== AnalysisStatus.Idle || reviewChanges) {
+        setShowTranslationPrompt(false);
+        return;
+      }
+      try {
+        const lang = await detectLanguage(text);
+        if (lang && !lang.toLowerCase().includes('english')) {
+          setDetectedLanguage(lang);
+          setShowTranslationPrompt(true);
+        } else {
+          setShowTranslationPrompt(false);
+        }
+      } catch (error) {
+        console.error("Language detection failed:", error);
+        setShowTranslationPrompt(false); // Hide on error
+      }
+    }, 1500); // 1.5-second delay after user stops typing
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [text, status, reviewChanges]);
+
+
   const highlights = useMemo(() => {
     if (!analysisResult) return [];
     const aiHighlights = (analysisResult.aiDetection?.highlightedPhrases || []).map(s => ({
@@ -353,9 +411,22 @@ function App() {
 
           <main className="min-w-0">
             <div className="glassmorphic rounded-2xl p-4 md:p-6 lg:p-8">
+              {showTranslationPrompt && detectedLanguage && (
+                <TranslationPrompt
+                  language={detectedLanguage}
+                  onTranslate={handleTranslateToEnglish}
+                  onDismiss={handleDismissTranslationPrompt}
+                  isTranslating={isTranslating}
+                />
+              )}
               <TextInputArea
                 value={text}
-                onChange={(e) => setText(e.target.value)}
+                onChange={(newValue) => {
+                  setText(newValue);
+                  // Hide prompt immediately on text change for better responsiveness.
+                  // The useEffect will then re-evaluate whether to show it again after a delay.
+                  if (showTranslationPrompt) setShowTranslationPrompt(false);
+                }}
                 isLoading={isLoading}
                 onUndo={undo}
                 onRedo={redo}

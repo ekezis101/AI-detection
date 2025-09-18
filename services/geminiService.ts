@@ -260,3 +260,24 @@ TRANSLATED TEXT:`,
     });
     return response.text.trim();
 }
+
+export async function detectLanguage(text: string): Promise<string> {
+    // Avoid API calls for very short or empty text to save resources.
+    if (text.trim().length < 20) {
+        return "English";
+    }
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: `Detect the language of the following text. Respond with only the name of the language (e.g., 'Spanish', 'French', 'English').
+---
+TEXT:
+${text}
+---
+LANGUAGE:`,
+        config: {
+            // Disable thinking for this simple, low-latency task for a faster response.
+            thinkingConfig: { thinkingBudget: 0 }
+        }
+    });
+    return response.text.trim();
+}

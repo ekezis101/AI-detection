@@ -4,7 +4,7 @@ import { Tooltip } from './Tooltip';
 
 interface TextInputAreaProps {
   value: string;
-  onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onChange: (value: string) => void;
   isLoading: boolean;
   onUndo: () => void;
   onRedo: () => void;
@@ -87,7 +87,7 @@ export const TextInputArea: React.FC<TextInputAreaProps> = ({
         </div>
         <textarea
           value={value}
-          onChange={onChange}
+          onChange={(e) => onChange(e.target.value)}
           placeholder="Paste your text here to begin analysis..."
           className="glassmorphic w-full h-48 md:h-64 p-4 pt-10 text-base leading-relaxed bg-transparent border-2 border-[var(--border-color)] rounded-xl focus:ring-2 focus:ring-[var(--accent-cyan)] focus:border-[var(--accent-cyan)] transition-shadow duration-200 resize-y text-gray-200 placeholder-gray-500"
           disabled={isLoading}
