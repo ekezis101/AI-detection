@@ -16,19 +16,17 @@ export const HighlightedText: React.FC<HighlightedTextProps> = ({ text, highligh
     return <p className="whitespace-pre-wrap leading-relaxed text-gray-700 dark:text-gray-300">{text}</p>;
   }
 
-  // Create a regex that finds any of the highlight strings, escape special regex characters
-  const escapedHighlights = highlights.map(h => h.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  const regex = new RegExp(`(${escapedHighlights.join('|')})`, 'gi'); // Added case-insensitive flag
+  // Create a regex that finds any of the highlight strings
+  const regex = new RegExp(`(${highlights.map(h => h.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g');
   const parts = text.split(regex);
   
-  // Create a case-insensitive map for better matching
+  // FIX: Explicitly type the Map to ensure `get` returns `Highlight | undefined`.
   const highlightMap = new Map<string, Highlight>(highlights.map(h => [h.text, h]));
-  const lowerCaseMap = new Map<string, Highlight>(highlights.map(h => [h.text.toLowerCase(), h]));
 
   return (
     <p className="whitespace-pre-wrap leading-relaxed text-gray-700 dark:text-gray-300">
       {parts.map((part, index) => {
-        const highlight = highlightMap.get(part) || lowerCaseMap.get(part.toLowerCase());
+        const highlight = highlightMap.get(part);
         if (highlight) {
           return (
             <span key={index} className="relative group rounded px-1 py-0.5" style={{ backgroundColor: highlight.color }}>
