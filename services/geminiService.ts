@@ -1,6 +1,10 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { AnalysisResult, SuggestionCategory, WritingSuggestion, PlagiarismResult } from '../types';
 
+if (!process.env.API_KEY) {
+  throw new Error('GEMINI_API_KEY is not configured. Please set your API key in the environment variables.');
+}
+
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const analysisSchema = {
@@ -111,6 +115,10 @@ const writingQualitySchema = {
 
 
 export async function analyzeText(text: string): Promise<Omit<AnalysisResult, 'plagiarism'>> {
+  if (!text.trim()) {
+    throw new Error('Text cannot be empty');
+  }
+
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
     contents: `Act as a world-class forensic linguistic analyst. Your task is to provide a comprehensive analysis of the following text, focusing on AI content detection and writing quality. For both AI detection and writing quality, your analysis must be granular. When you identify a problematic segment, you MUST return only the specific word or phrase that contains the issue. DO NOT return the entire sentence. For example, if the issue is a single misspelled word, the 'originalPhrase' should be just that word. This precision is critical for the application's highlighting feature.
@@ -128,11 +136,24 @@ When you find an issue, pinpoint the exact word or phrase that is problematic.`
     },
   });
 
+  if (!response.text) {
+    throw new Error('No response received from AI service');
+  }
+
+  try {
   const jsonResponse = JSON.parse(response.text);
   return jsonResponse as Omit<AnalysisResult, 'plagiarism'>;
+  } catch (parseError) {
+    console.error('Failed to parse AI response:', response.text);
+    throw new Error('Invalid response format from AI service');
+  }
 }
 
 export async function checkGrammar(text: string): Promise<{writingQuality: WritingSuggestion[]}> {
+    if (!text.trim()) {
+        throw new Error('Text cannot be empty');
+    }
+
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: `Analyze the following text for writing quality issues, including grammar, spelling, punctuation, style, and tone. For each issue, identify and return the *specific phrase* that needs correction. DO NOT return the entire sentence, only the precise substring with the issue.
@@ -147,11 +168,24 @@ ${text}
         },
     });
 
+    if (!response.text) {
+        throw new Error('No response received from AI service');
+    }
+
+    try {
     return JSON.parse(response.text);
+    } catch (parseError) {
+        console.error('Failed to parse AI response:', response.text);
+        throw new Error('Invalid response format from AI service');
+    }
 }
 
 // Mock function for plagiarism checking
 export async function checkPlagiarism(text: string): Promise<PlagiarismResult> {
+    if (!text.trim()) {
+        throw new Error('Text cannot be empty');
+    }
+
     console.log("Simulating plagiarism check for:", text.substring(0, 50) + "...");
     
     // Simulate network delay
@@ -183,6 +217,10 @@ export async function humanizeText(
     vocabularyRichness: string,
     textLength: string
 ): Promise<string> {
+    if (!text.trim()) {
+        throw new Error('Text cannot be empty');
+    }
+
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: `Please rewrite the following text to sound more human-written, adhering to the specified parameters.
@@ -199,10 +237,19 @@ ${text}
 ---
 REWRITTEN TEXT:`,
     });
+
+    if (!response.text) {
+        throw new Error('No response received from AI service');
+    }
+
     return response.text.trim();
 }
 
 export async function correctGrammar(text: string, dialect: string): Promise<string> {
+    if (!text.trim()) {
+        throw new Error('Text cannot be empty');
+    }
+
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: `Please correct all grammar, spelling, and punctuation in the following text to strictly adhere to ${dialect} standards.
@@ -213,10 +260,19 @@ ${text}
 ---
 CORRECTED TEXT:`,
     });
+
+    if (!response.text) {
+        throw new Error('No response received from AI service');
+    }
+
     return response.text.trim();
 }
 
 export async function proofreadText(text: string): Promise<{writingQuality: WritingSuggestion[]}> {
+    if (!text.trim()) {
+        throw new Error('Text cannot be empty');
+    }
+
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: `Perform a comprehensive proofread of the following text. Go beyond basic grammar and spelling. Focus on improving style, consistency, clarity, and overall flow. For each issue found, identify the specific phrase that needs improvement.
@@ -231,10 +287,23 @@ ${text}
         },
     });
 
+    if (!response.text) {
+        throw new Error('No response received from AI service');
+    }
+
+    try {
     return JSON.parse(response.text);
+    } catch (parseError) {
+        console.error('Failed to parse AI response:', response.text);
+        throw new Error('Invalid response format from AI service');
+    }
 }
 
 export async function summarizeText(text: string): Promise<string> {
+    if (!text.trim()) {
+        throw new Error('Text cannot be empty');
+    }
+
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: `Generate a concise, easy-to-read summary of the following text. The summary should capture the main points and key information.
@@ -244,10 +313,22 @@ ${text}
 ---
 SUMMARY:`,
     });
+
+    if (!response.text) {
+        throw new Error('No response received from AI service');
+    }
+
     return response.text.trim();
 }
 
 export async function translateText(text: string, language: string): Promise<string> {
+    if (!text.trim()) {
+        throw new Error('Text cannot be empty');
+    }
+    if (!language.trim()) {
+        throw new Error('Target language cannot be empty');
+    }
+
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: `Please translate the following text into ${language}.
@@ -258,6 +339,11 @@ ${text}
 ---
 TRANSLATED TEXT:`,
     });
+
+    if (!response.text) {
+        throw new Error('No response received from AI service');
+    }
+
     return response.text.trim();
 }
 
@@ -266,6 +352,7 @@ export async function detectLanguage(text: string): Promise<string> {
     if (text.trim().length < 20) {
         return "English";
     }
+
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: `Detect the language of the following text. Respond with only the name of the language (e.g., 'Spanish', 'French', 'English').
@@ -279,5 +366,10 @@ LANGUAGE:`,
             thinkingConfig: { thinkingBudget: 0 }
         }
     });
+
+    if (!response.text) {
+        throw new Error('No response received from AI service');
+    }
+
     return response.text.trim();
 }

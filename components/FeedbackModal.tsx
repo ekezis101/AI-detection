@@ -29,7 +29,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, o
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg m-4 transform transition-all">
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Submit Feedback</h2>
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            We'd love to hear your thoughts or suggestions on how we can improve EKEZISOFFICAL WRITER.
+            We'd love to hear your thoughts or suggestions on how we can improve ClarifyAI Grammar.
         </p>
         <div className="mt-6">
           <textarea
@@ -39,7 +39,11 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose, o
             className="w-full h-32 p-3 text-base leading-relaxed bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow duration-200 resize-y"
             disabled={isSubmitting}
             aria-label="Feedback input"
+            maxLength={1000}
           />
+          <div className="mt-1 text-xs text-gray-400 text-right">
+            {feedback.length}/1000 characters
+          </div>
         </div>
         <div className="mt-6 flex justify-end space-x-3">
           <Tooltip title="Close the feedback form">
