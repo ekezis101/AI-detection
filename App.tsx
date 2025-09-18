@@ -28,7 +28,6 @@ import { DEFAULT_TEXT, TAB_AI_DETECTION, TAB_WRITING_QUALITY, TAB_PLAGIARISM } f
 import { AnalyzeIcon } from './components/icons';
 import { useHistoryState } from './hooks/useHistoryState';
 import { Footer } from './components/Footer';
-import { useCallback } from 'react';
 
 type ReviewChangesState = {
   original: string;
@@ -64,15 +63,8 @@ function App() {
   const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
   const [showTranslationPrompt, setShowTranslationPrompt] = useState<boolean>(false);
 
-  // Clear error after a timeout
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
 
-  const handleAnalyze = useCallback(async () => {
+  const handleAnalyze = async () => {
     if (!text.trim()) return;
     setStatus(AnalysisStatus.Loading);
     setError(null);
@@ -96,11 +88,10 @@ function App() {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
       setStatus(AnalysisStatus.Error);
-      console.error('Analysis error:', err);
     }
-  }, [text]);
+  };
 
-  const handleGrammarCheck = useCallback(async () => {
+  const handleGrammarCheck = async () => {
     if (!text.trim()) return;
     setStatus(AnalysisStatus.Loading);
     setError(null);
@@ -118,11 +109,10 @@ function App() {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
       setStatus(AnalysisStatus.Error);
-      console.error('Grammar check error:', err);
     }
-  }, [text]);
+  };
   
-  const handleProofread = useCallback(async () => {
+  const handleProofread = async () => {
     if (!text.trim()) return;
     setIsProofreading(true);
     setStatus(AnalysisStatus.Loading); // Use main loading state
@@ -141,13 +131,12 @@ function App() {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
       setStatus(AnalysisStatus.Error);
-      console.error('Proofread error:', err);
     } finally {
       setIsProofreading(false);
     }
-  }, [text]);
+  };
 
-  const handlePlagiarismCheck = useCallback(async () => {
+  const handlePlagiarismCheck = async () => {
     if (!text.trim()) return;
     setStatus(AnalysisStatus.Loading);
     setError(null);
@@ -166,11 +155,10 @@ function App() {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
       setStatus(AnalysisStatus.Error);
-      console.error('Plagiarism check error:', err);
     }
-  }, [text]);
+  };
 
-  const handleCorrectionConfirm = useCallback(async (dialect: string) => {
+  const handleCorrectionConfirm = async (dialect: string) => {
     if (!text.trim()) return;
     setIsCorrectionModalOpen(false);
     setIsCorrecting(true);
@@ -183,13 +171,12 @@ function App() {
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
         setError(errorMessage);
         setStatus(AnalysisStatus.Error);
-        console.error('Grammar correction error:', err);
     } finally {
         setIsCorrecting(false);
     }
-  }, [text]);
+  };
   
-  const handleSummarize = useCallback(async () => {
+  const handleSummarize = async () => {
     if (!text.trim()) return;
     setIsSummarizing(true);
     setError(null);
@@ -201,13 +188,12 @@ function App() {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
       setStatus(AnalysisStatus.Error);
-      console.error('Summarize error:', err);
     } finally {
       setIsSummarizing(false);
     }
-  }, [text]);
+  }
 
-  const handleHumanizeConfirm = useCallback(async (
+  const handleHumanizeConfirm = async (
     tone: string, 
     level: string,
     sentenceComplexity: string,
@@ -226,13 +212,12 @@ function App() {
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
         setError(errorMessage);
         setStatus(AnalysisStatus.Error);
-        console.error('Humanize error:', err);
     } finally {
         setIsHumanizing(false);
     }
-  }, [text]);
+  };
   
-  const handleTranslateConfirm = useCallback(async (language: string) => {
+  const handleTranslateConfirm = async (language: string) => {
     if (!text.trim()) return;
     setIsTranslateModalOpen(false);
     setIsTranslating(true);
@@ -245,13 +230,12 @@ function App() {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
       setStatus(AnalysisStatus.Error);
-      console.error('Translation error:', err);
     } finally {
       setIsTranslating(false);
     }
-  }, [text]);
+  };
 
-  const handleTranslateToEnglish = useCallback(async () => {
+  const handleTranslateToEnglish = async () => {
     if (!text.trim()) return;
     setShowTranslationPrompt(false);
     setIsTranslating(true);
@@ -264,37 +248,36 @@ function App() {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred.';
       setError(errorMessage);
       setStatus(AnalysisStatus.Error);
-      console.error('Translation to English error:', err);
     } finally {
       setIsTranslating(false);
     }
-  }, [text]);
+  };
   
-  const handleDismissTranslationPrompt = useCallback(() => {
+  const handleDismissTranslationPrompt = () => {
     setShowTranslationPrompt(false);
-  }, []);
+  };
 
-  const handleAcceptChanges = useCallback(() => {
+  const handleAcceptChanges = () => {
     if (reviewChanges) {
       setText(reviewChanges.modified);
       setAnalysisResult(null);
       setStatus(AnalysisStatus.Idle);
       setReviewChanges(null);
     }
-  }, [reviewChanges, setText]);
+  };
 
-  const handleDiscardChanges = useCallback(() => {
+  const handleDiscardChanges = () => {
     setReviewChanges(null);
-  }, []);
+  };
   
-  const handleFeedbackSubmit = useCallback((feedbackText: string) => {
+  const handleFeedbackSubmit = (feedbackText: string) => {
     console.log("--- User Feedback Submitted ---");
     console.log(feedbackText);
     console.log("-------------------------------");
     setIsFeedbackModalOpen(false);
-  }, []);
+  };
 
-  const handleApplySuggestion = useCallback((suggestionToApply: WritingSuggestion) => {
+  const handleApplySuggestion = (suggestionToApply: WritingSuggestion) => {
     const newSentence = suggestionToApply.originalSentence.replace(
       suggestionToApply.originalPhrase,
       suggestionToApply.suggestion
@@ -311,51 +294,46 @@ function App() {
         ),
       };
     });
-  }, [text, setText]);
+  };
   
-  const handleCopy = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
-      setError('Failed to copy text to clipboard');
-    }
-  }, [text]);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text).catch(err => console.error('Failed to copy text: ', err));
+  };
 
-  const handlePaste = useCallback(async () => {
+  const handlePaste = async () => {
     try {
       const clipboardText = await navigator.clipboard.readText();
       setText(clipboardText);
     } catch (err) {
       console.error('Failed to paste text: ', err);
-      setError('Failed to paste text from clipboard');
     }
-  }, [setText]);
+  };
   
-  const handleFileUpload = useCallback((file: File) => {
+  const handleFileUpload = (file: File) => {
     setError(null);
     if (file && file.type === 'text/plain') {
       const reader = new FileReader();
       reader.onload = (e) => {
         const fileContent = e.target?.result as string;
-        if (fileContent) {
-          setText(fileContent);
-        }
+        setText(fileContent);
       };
       reader.onerror = () => {
         setError("Failed to read the uploaded file.");
         setStatus(AnalysisStatus.Error);
-      };
+      }
       reader.readAsText(file);
     } else {
         setError("Unsupported file type. Please upload a .txt file.");
+        // Temporarily show the error
+        setTimeout(() => setError(null), 3000);
     }
-  }, [setText]);
+  };
 
-  const handleUrlImport = useCallback(() => {
+  const handleUrlImport = () => {
     console.log("Importing from URL:", url);
     setError("Importing from URL is not yet supported.");
-  }, [url]);
+    setTimeout(() => setError(null), 3000);
+  };
 
   // Debounced language detection
   useEffect(() => {
@@ -384,12 +362,6 @@ function App() {
     };
   }, [text, status, reviewChanges]);
 
-  const handleTextChange = useCallback((newValue: string) => {
-    setText(newValue);
-    // Hide prompt immediately on text change for better responsiveness.
-    // The useEffect will then re-evaluate whether to show it again after a delay.
-    if (showTranslationPrompt) setShowTranslationPrompt(false);
-  }, [setText, showTranslationPrompt]);
 
   const highlights = useMemo(() => {
     if (!analysisResult) return [];
@@ -449,7 +421,12 @@ function App() {
               )}
               <TextInputArea
                 value={text}
-                onChange={handleTextChange}
+                onChange={(newValue) => {
+                  setText(newValue);
+                  // Hide prompt immediately on text change for better responsiveness.
+                  // The useEffect will then re-evaluate whether to show it again after a delay.
+                  if (showTranslationPrompt) setShowTranslationPrompt(false);
+                }}
                 isLoading={isLoading}
                 onUndo={undo}
                 onRedo={redo}
@@ -463,12 +440,7 @@ function App() {
                 onUrlImport={handleUrlImport}
               />
               
-              {error && (
-                <div className="mt-6 text-center text-red-400 bg-red-900/40 p-4 rounded-lg border border-red-500/30">
-                  <p className="font-medium">Error</p>
-                  <p className="text-sm mt-1">{error}</p>
-                </div>
-              )}
+              {error && <div className="mt-6 text-center text-red-400 bg-red-900/40 p-4 rounded-lg">{error}</div>}
               
               {(isAnalyzing || (status === AnalysisStatus.Success && analysisResult)) ? (
                 <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
