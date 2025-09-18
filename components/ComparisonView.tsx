@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { diffChars } from 'diff';
 import { CloseIcon } from './icons';
 import { Tooltip } from './Tooltip';
@@ -18,17 +18,33 @@ const DiffPane: React.FC<{ title: string; content: React.ReactNode }> = ({ title
 );
 
 export const ComparisonView: React.FC<ComparisonViewProps> = ({ originalText, modifiedText, onAccept, onDiscard }) => {
-  const differences = diffChars(originalText, modifiedText);
+  const differences = useMemo(() => diffChars(originalText, modifiedText), [originalText, modifiedText]);
 
-  const originalContent = differences.map((part, index) => {
+  const originalContent = useMemo(() => differences.map((part, index) => {
     const style = part.added ? { display: 'none' } : part.removed ? { backgroundColor: 'rgba(239, 68, 68, 0.2)', textDecoration: 'line-through' } : {};
     return <span key={index} style={style}>{part.value}</span>;
-  });
+  }), [differences]);
 
-  const modifiedContent = differences.map((part, index) => {
+  const modifiedContent = useMemo(() => differences.map((part, index) => {
     const style = part.removed ? { display: 'none' } : part.added ? { backgroundColor: 'rgba(16, 185, 129, 0.2)' } : {};
     return <span key={index} style={style}>{part.value}</span>;
-  });
+  }), [differences]);
+
+  // Add keyboard shortcuts for accept/discard
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        onAccept();
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        onDiscard();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onAccept, onDiscard]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex flex-col p-4 md:p-8" aria-modal="true" role="dialog">
@@ -47,7 +63,7 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({ originalText, mo
       </div>
 
       <div className="flex-shrink-0 flex justify-end space-x-4 mt-6">
-        <Tooltip title="Revert to the original text">
+        <Tooltip title="Revert to the original text (Esc)">
             <button
                 onClick={onDiscard}
                 className="px-6 py-2 text-sm font-medium text-gray-200 bg-transparent border border-gray-500 rounded-md shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
@@ -55,7 +71,7 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({ originalText, mo
                 Discard Changes
             </button>
         </Tooltip>
-        <Tooltip title="Apply the new version to the main editor">
+        <Tooltip title="Apply the new version to the main editor (Ctrl+Enter)">
             <button
                 onClick={onAccept}
                 className="px-6 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"

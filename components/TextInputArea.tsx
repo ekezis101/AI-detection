@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { UndoIcon, RedoIcon, CopyIcon, PasteIcon, UploadIcon, LinkIcon } from './icons';
 import { Tooltip } from './Tooltip';
 
@@ -37,8 +37,36 @@ export const TextInputArea: React.FC<TextInputAreaProps> = ({
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       onFileUpload(event.target.files[0]);
+      // Reset the input value to allow uploading the same file again
+      event.target.value = '';
     }
   };
+
+  // Add keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        switch (event.key) {
+          case 'z':
+            if (event.shiftKey) {
+              event.preventDefault();
+              onRedo();
+            } else {
+              event.preventDefault();
+              onUndo();
+            }
+            break;
+          case 'y':
+            event.preventDefault();
+            onRedo();
+            break;
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [onUndo, onRedo]);
 
   return (
     <div>
@@ -92,6 +120,7 @@ export const TextInputArea: React.FC<TextInputAreaProps> = ({
           className="glassmorphic w-full h-48 md:h-64 p-4 pt-10 text-base leading-relaxed bg-transparent border-2 border-[var(--border-color)] rounded-xl focus:ring-2 focus:ring-[var(--accent-cyan)] focus:border-[var(--accent-cyan)] transition-shadow duration-200 resize-y text-gray-200 placeholder-gray-500"
           disabled={isLoading}
           maxLength={MAX_CHARS}
+          spellCheck={false}
         />
         <div className="absolute bottom-3 right-3 flex items-center space-x-3 text-sm text-gray-400">
           <span>{words.toLocaleString()} words</span>
